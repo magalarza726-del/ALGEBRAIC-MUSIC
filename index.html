@@ -70,6 +70,7 @@
           <div class="operation-title"><div class="operation-icon">ƒ(x)</div><div><p class="section-overline">02 / TRANSFORMACIÓN</p><h3>Laboratorio de operaciones</h3></div></div>
           <div class="operation-fields">
             <label><span>OPERACIÓN MATEMÁTICA</span><select id="operation">
+              <option value="sum">A + B · Suma real</option>
               <option value="average">A + B · Suma promediada</option>
               <option value="subtract">A − B · Diferencia positiva</option>
               <option value="matrixProduct">A × B · Multiplicación matricial</option>
@@ -79,7 +80,7 @@
               <option value="invertIntensity">A · Invertir intensidad</option>
               <option value="inverse">A⁻¹ · Inversa algebraica</option>
             </select></label>
-            <label><span>NORMALIZACIÓN</span><select id="normalization"><option value="fixed">Escala fija [0, 1]</option><option value="peak">Pico máximo = 1</option></select></label>
+            <label><span>NORMALIZACIÓN</span><select id="normalization"><option value="fixed">Escala fija [0, 1]</option><option value="peak">Pico máximo = 1</option><option value="range">Mínimo / máximo (incluye negativos)</option></select></label>
           </div>
           <p class="operation-explanation" id="operationExplanation"></p>
           <div class="operation-formula" id="formula">C = (A + B) / 2</div>
@@ -90,20 +91,21 @@
           <div class="result-heading"><div><p class="section-overline">03 / RESULTADO</p><h3><span class="matrix-letter letter-c">C</span> Ritmo resultante</h3></div><span class="live-tag">● ACTUALIZACIÓN EN VIVO</span></div>
           <div class="matrix-scroll result-scroll"><div class="matrix-grid" id="matrixC"></div></div>
           <div class="result-actions"><div><strong id="countC">0 golpes</strong><span id="resultDescriptor">Intensidades de 0 a 3</span></div><div class="result-buttons"><button id="copyToA" class="btn btn-outline">C → A</button><button id="copyToB" class="btn btn-outline">C → B</button><button id="previewC" class="btn btn-accent">▶ Escuchar C</button></div></div>
-          <details class="numeric-details"><summary>Ver matrices numéricas normalizadas</summary><div class="numeric-columns"><div><h5>A / 3</h5><pre id="numericA"></pre></div><div><h5>B / 3</h5><pre id="numericB"></pre></div><div><h5>C continua (sin cuantizar)</h5><pre id="numericC"></pre></div></div><p>La reproducción cuantiza C a 0, 1, 2 o 3; sus valores continuos se preservan en la operación y al exportar.</p></details>
+          <details class="numeric-details"><summary>Ver matrices numéricas normalizadas</summary><div class="numeric-columns"><div><h5>A / 3</h5><pre id="numericA"></pre></div><div><h5>B / 3</h5><pre id="numericB"></pre></div><div><h5>C sin normalizar (resultado matemático)</h5><pre id="numericRaw"></pre></div><div><h5>C continua normalizada (sin cuantizar)</h5><pre id="numericC"></pre></div></div><p>La matriz bruta C conserva el cálculo algebraico original, incluidos valores negativos. La matriz normalizada es una proyección audible; la reproducción la cuantiza en 0–3. Las dos se exportan en JSON.</p></details>
         </article>
       </section>
 
       <aside class="sound-column">
         <section class="panel sound-panel">
           <div class="sound-heading"><div><p class="section-overline">04 / AUDIO</p><h3>Diseño de sonido</h3></div><span class="sound-glyph">♫</span></div>
-          <p class="sound-intro">Grabaciones reales, diferentes capas de fuerza y control por instrumento.</p>
+          <p class="sound-intro">Hasta 31 opciones: batería acústica multicapa, trap, 808, bounce y vintage. Más tomas alternativas y mezcla con ambiente.</p>
           <div class="audio-progress"><div class="progress-header"><span id="sampleStatus">Preparando banco acústico...</span><span id="sampleCounter">0 / 0</span></div><div class="progress-track"><div id="sampleProgress"></div></div></div>
           <label class="sound-control"><span>RESPUESTA A LA INTENSIDAD</span><select id="velocityCurve"><option value="natural">Natural · timbre y volumen</option><option value="dynamic">Dinámica · más contraste</option><option value="compressed">Comprimida · menos contraste</option></select></label>
+          <label class="sound-control"><span>AMBIENTE DE SALA · <output id="roomValue">12%</output></span><input id="room" type="range" min="0" max="35" value="12"></label>
           <label class="sound-control"><span>MEZCLA / LÍMITE DE SALIDA</span><select id="compression"><option value="soft">Protección suave activada</option><option value="off">Sin compresor</option></select></label>
           <div class="track-tools"><strong>8 canales</strong><button id="resetMixer" class="link-button">Restablecer mezcla</button></div>
           <div id="mixer" class="mixer-list"></div>
-          <p class="small-note">Personalización: cambia el instrumento de cualquier fila, su volumen, afinación, panorama o carga tres muestras propias (suave / media / fuerte). Las muestras personalizadas se mantienen durante esta sesión.</p>
+          <p class="small-note">Elige cualquier preset acústico o electrónico en cada pista. Los acústicos usan distintas grabaciones de fuerza y hasta cuatro tomas por nivel; los electrónicos usan one-shots, con variaciones de timbre cuando están disponibles. También puedes cargar tus tres muestras. Los archivos personalizados permanecen durante la sesión.</p>
         </section>
         <section class="panel utilities-panel">
           <div><p class="section-overline">05 / PROYECTO</p><h3>Herramientas</h3></div>
@@ -116,7 +118,7 @@
     <footer><span>ALGEBRAIC MUSIC · v1.0 · Una forma diferente de escuchar las matrices</span><span>Samples acústicos CC0 · <a href="https://github.com/0x4D44/ferrosintesis" target="_blank" rel="noopener">Proveniencia</a> · <a href="https://github.com/magalarza726-del/ALGEBRAIC-MUSIC" target="_blank" rel="noopener">GitHub</a></span></footer>
   </div>
 
-  <dialog id="helpDialog" class="help-dialog"><div class="dialog-body"><div class="dialog-top"><h3>¿Cómo se usa?</h3><button id="closeHelp" aria-label="Cerrar">✕</button></div><p><strong>1.</strong> Las 8 filas son instrumentos; las 8 columnas son corcheas de un compás 4/4. Haz clic en una celda para cambiar la intensidad.</p><p><strong>2.</strong> Edita A y B, elige una operación y observa la matriz C. Los valores se normalizan entre 0 y 1 y se convierten a 0–3 para sonar.</p><p><strong>3.</strong> Pulsa ▶ para escuchar A, B o C. Configura las intensidades en el mezclador: cada fuerza utiliza una grabación diferente, además de cambiar el volumen.</p><p><strong>4.</strong> Para usar tus propios archivos, abre las opciones de un canal y carga hasta tres muestras (WAV, MP3, FLAC u otros formatos que soporte el navegador).</p><p>La inversa algebraica A⁻¹ solo existe cuando A es invertible. El programa lo indicará cuando sea singular.</p><button class="btn btn-accent" id="closeHelpBottom">Entendido</button></div></dialog>
+  <dialog id="helpDialog" class="help-dialog"><div class="dialog-body"><div class="dialog-top"><h3>¿Cómo se usa?</h3><button id="closeHelp" aria-label="Cerrar">✕</button></div><p><strong>1.</strong> Las 8 filas son instrumentos; las 8 columnas son corcheas de un compás 4/4. Haz clic en una celda para cambiar la intensidad.</p><p><strong>2.</strong> Edita A y B, elige una operación y observa la matriz C. Los valores se normalizan entre 0 y 1 y se convierten a 0–3 para sonar.</p><p><strong>3.</strong> Pulsa ▶ para escuchar A, B o C. Hay sonidos acústicos con grabaciones de fuerza independientes y kits electrónicos con muestras alternativas. En cada pista puedes modificar volumen, afinación, panorámica y ambiente.</p><p><strong>4.</strong> Para usar tus propios archivos, abre las opciones de un canal y carga hasta tres muestras (WAV, MP3, FLAC u otros formatos que soporte el navegador).</p><p>La inversa algebraica A⁻¹ solo existe cuando A es invertible. La matriz C bruta muestra el resultado fiel; para escucharla se proyecta a intensidades de 0 a 1 y luego se cuantiza.</p><button class="btn btn-accent" id="closeHelpBottom">Entendido</button></div></dialog>
   <div id="toast" class="toast" aria-live="polite" role="status"></div>
 </body>
 </html>
