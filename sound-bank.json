@@ -1,0 +1,325 @@
+{
+  "version": 2,
+  "sources": {
+    "acoustic": "https://raw.githubusercontent.com/0x4D44/ferrosintesis/2f26075ea93291535a869f5d356d2e3d934c7868/crates/ferrosintesis-samples-",
+    "electronic": "https://raw.githubusercontent.com/Boochi44/free-drum-samples/77ba31428a079dd8f17c8e144c1e649ea0a198b3/"
+  },
+  "banks": {
+    "kick": {
+      "name": "Bombo acústico · Kick Mic",
+      "category": "Acústica · Virtuosity / Karoryfer",
+      "type": "acoustic",
+      "folder": "drumkit",
+      "levels": [
+        1,
+        2,
+        4
+      ],
+      "rr": 4
+    },
+    "hho": {
+      "name": "Hi-hat abierto acústico",
+      "category": "Acústica · Virtuosity / Karoryfer",
+      "type": "acoustic",
+      "folder": "drumkit",
+      "levels": [
+        1,
+        2,
+        4
+      ],
+      "rr": 3
+    },
+    "hhc": {
+      "name": "Hi-hat cerrado acústico",
+      "category": "Acústica · Virtuosity / Karoryfer",
+      "type": "acoustic",
+      "folder": "drumkit",
+      "levels": [
+        1,
+        2,
+        4
+      ],
+      "rr": 4
+    },
+    "snare": {
+      "name": "Redoblante acústico · Center",
+      "category": "Acústica · Virtuosity / Karoryfer",
+      "type": "acoustic",
+      "folder": "drumkit",
+      "levels": [
+        2,
+        4,
+        6
+      ],
+      "rr": 3
+    },
+    "crash": {
+      "name": "Crash acústico",
+      "category": "Acústica · Virtuosity / Karoryfer",
+      "type": "acoustic",
+      "folder": "drumkit2",
+      "levels": [
+        1,
+        2,
+        3
+      ],
+      "rr": 4
+    },
+    "china": {
+      "name": "China crash 18 pulgadas",
+      "category": "Acústica · Virtuosity / Karoryfer",
+      "type": "acoustic",
+      "folder": "drumkit2",
+      "levels": [
+        1,
+        3,
+        5
+      ],
+      "rr": 4
+    },
+    "tomhi": {
+      "name": "Tom alto acústico",
+      "category": "Acústica · Virtuosity / Karoryfer",
+      "type": "acoustic",
+      "folder": "drumkit",
+      "levels": [
+        1,
+        2,
+        4
+      ],
+      "rr": 3
+    },
+    "tomlo": {
+      "name": "Tom bajo acústico",
+      "category": "Acústica · Virtuosity / Karoryfer",
+      "type": "acoustic",
+      "folder": "drumkit",
+      "levels": [
+        1,
+        2,
+        4
+      ],
+      "rr": 3
+    },
+    "ride": {
+      "name": "Ride bow acústico",
+      "category": "Acústica · Virtuosity / Karoryfer",
+      "type": "acoustic",
+      "folder": "drumkit",
+      "levels": [
+        1,
+        2,
+        3
+      ],
+      "rr": 4
+    },
+    "ridebell": {
+      "name": "Ride bell · campana",
+      "category": "Acústica · Virtuosity / Karoryfer",
+      "type": "acoustic",
+      "folder": "drumkit",
+      "levels": [
+        1,
+        2,
+        3
+      ],
+      "rr": 3
+    },
+    "sidestick": {
+      "name": "Cross-stick / aro",
+      "category": "Acústica · Virtuosity / Karoryfer",
+      "type": "acoustic",
+      "folder": "drumkit",
+      "levels": [
+        1,
+        2,
+        3
+      ],
+      "rr": 3
+    },
+    "hhp": {
+      "name": "Hi-hat con pedal",
+      "category": "Acústica · Virtuosity / Karoryfer",
+      "type": "acoustic",
+      "folder": "drumkit",
+      "levels": [
+        1,
+        2,
+        3
+      ],
+      "rr": 4
+    },
+    "splash": {
+      "name": "Hi-hat splash acústico",
+      "category": "Acústica · Virtuosity / Karoryfer",
+      "type": "acoustic",
+      "folder": "drumkit2",
+      "levels": [
+        1,
+        1,
+        1
+      ],
+      "rr": 4
+    },
+    "trapKick": {
+      "name": "Hard Trap · Kick",
+      "category": "Electrónica · Hard Trap",
+      "type": "electronic",
+      "files": [
+        "drum-samples/01-hard-trap/kicks/hard-kick-03.wav",
+        "drum-samples/01-hard-trap/kicks/hard-kick-02.wav",
+        "drum-samples/01-hard-trap/kicks/hard-kick-01.wav"
+      ]
+    },
+    "trapSnare": {
+      "name": "Hard Trap · Snare",
+      "category": "Electrónica · Hard Trap",
+      "type": "electronic",
+      "files": [
+        "drum-samples/01-hard-trap/snares/hard-snare-03.wav",
+        "drum-samples/01-hard-trap/snares/hard-snare-02.wav",
+        "drum-samples/01-hard-trap/snares/hard-snare-01.wav"
+      ]
+    },
+    "trap808": {
+      "name": "Hard Trap · 808 Bass",
+      "category": "Electrónica · Hard Trap",
+      "type": "electronic",
+      "files": [
+        "drum-samples/01-hard-trap/808s/808-bass-sub.wav",
+        "drum-samples/01-hard-trap/808s/808-bass-dist.wav",
+        "drum-samples/01-hard-trap/808s/808-dist-long.wav"
+      ]
+    },
+    "trapClap": {
+      "name": "Hard Trap · Clap",
+      "category": "Electrónica · Hard Trap",
+      "type": "electronic",
+      "files": [
+        "drum-samples/01-hard-trap/claps/clap-01.wav"
+      ]
+    },
+    "trapHat": {
+      "name": "Hard Trap · Closed Hat",
+      "category": "Electrónica · Hard Trap",
+      "type": "electronic",
+      "files": [
+        "drum-samples/01-hard-trap/hi-hats/hi-hat-closed-01.wav"
+      ]
+    },
+    "trapOpenHat": {
+      "name": "Hard Trap · Open Hat",
+      "category": "Electrónica · Hard Trap",
+      "type": "electronic",
+      "files": [
+        "drum-samples/01-hard-trap/open-hats/open-hat-01.wav"
+      ]
+    },
+    "trapCowbell": {
+      "name": "Hard Trap · Cowbell",
+      "category": "Electrónica · Hard Trap",
+      "type": "electronic",
+      "files": [
+        "drum-samples/01-hard-trap/percs/perc-cowbell.wav"
+      ]
+    },
+    "trapRim": {
+      "name": "Hard Trap · Rimshot",
+      "category": "Electrónica · Hard Trap",
+      "type": "electronic",
+      "files": [
+        "drum-samples/01-hard-trap/percs/perc-rimshot.wav"
+      ]
+    },
+    "bounceKick": {
+      "name": "Bounce · Kick",
+      "category": "Electrónica · Bounce",
+      "type": "electronic",
+      "files": [
+        "drum-samples/02-bounce/kicks/bounce-kick-01.wav",
+        "drum-samples/02-bounce/kicks/bounce-kick-02.wav",
+        "drum-samples/02-bounce/kicks/bounce-kick-03.wav"
+      ]
+    },
+    "bounceSnare": {
+      "name": "Bounce · Snare",
+      "category": "Electrónica · Bounce",
+      "type": "electronic",
+      "files": [
+        "drum-samples/02-bounce/snares/bounce-snare-01.wav",
+        "drum-samples/02-bounce/snares/bounce-snare-02.wav",
+        "drum-samples/02-bounce/snares/bounce-snare-03.wav"
+      ]
+    },
+    "bounceClap": {
+      "name": "Bounce · Clap",
+      "category": "Electrónica · Bounce",
+      "type": "electronic",
+      "files": [
+        "drum-samples/02-bounce/claps/clap-01.wav"
+      ]
+    },
+    "bounce808": {
+      "name": "Bounce · 808 Bass",
+      "category": "Electrónica · Bounce",
+      "type": "electronic",
+      "files": [
+        "drum-samples/02-bounce/808s/808-bass-punch.wav",
+        "drum-samples/02-bounce/808s/808-bass-long.wav",
+        "drum-samples/02-bounce/808s/808-round-long.wav"
+      ]
+    },
+    "vintageKick": {
+      "name": "Vintage · Kick",
+      "category": "Electrónica · Vintage",
+      "type": "electronic",
+      "files": [
+        "drum-samples/03-soulful-vintage/kicks/vintage-kick-01.wav",
+        "drum-samples/03-soulful-vintage/kicks/vintage-kick-02.wav",
+        "drum-samples/03-soulful-vintage/kicks/vintage-kick-03.wav"
+      ]
+    },
+    "vintageSnare": {
+      "name": "Vintage · Snare",
+      "category": "Electrónica · Vintage",
+      "type": "electronic",
+      "files": [
+        "drum-samples/03-soulful-vintage/snares/vintage-snare-01.wav",
+        "drum-samples/03-soulful-vintage/snares/vintage-snare-02.wav",
+        "drum-samples/03-soulful-vintage/snares/vintage-snare-03.wav"
+      ]
+    },
+    "vintageHat": {
+      "name": "Vintage · Hi-hat",
+      "category": "Electrónica · Vintage",
+      "type": "electronic",
+      "files": [
+        "drum-samples/03-soulful-vintage/hi-hats/hi-hat-closed-01.wav"
+      ]
+    },
+    "vintageClap": {
+      "name": "Vintage · Clap",
+      "category": "Electrónica · Vintage",
+      "type": "electronic",
+      "files": [
+        "drum-samples/03-soulful-vintage/claps/vintage-clap-01.wav"
+      ]
+    },
+    "vintage808": {
+      "name": "Vintage · 808 Bass",
+      "category": "Electrónica · Vintage",
+      "type": "electronic",
+      "files": [
+        "drum-samples/03-soulful-vintage/808s/808-bass-lofi.wav"
+      ]
+    },
+    "vintageMaraca": {
+      "name": "Vintage · Maraca",
+      "category": "Electrónica · Vintage",
+      "type": "electronic",
+      "files": [
+        "drum-samples/03-soulful-vintage/percs/perc-maraca.wav"
+      ]
+    }
+  }
+}
