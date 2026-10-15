@@ -39,6 +39,12 @@ export function normalizeResult(raw, mode = "fixed") {
     const peak = Math.max(0, ...raw.flat().filter(Number.isFinite));
     return raw.map(row => row.map(value => peak > 1e-10 ? clamp(value / peak) : 0));
   }
+  if (mode === "range") {
+    const values=raw.flat().filter(Number.isFinite);
+    const min=Math.min(...values), max=Math.max(...values);
+    if (max - min <= 1e-10) return raw.map(row=>row.map(()=>0));
+    return raw.map(row=>row.map(v=>clamp((v-min)/(max-min))));
+  }
   return raw.map(row => row.map(clamp));
 }
 export function multiply(A, B) {
@@ -66,13 +72,14 @@ export function inverse(A) {
   return augmented.map(row => row.slice(SIZE));
 }
 export const OPERATIONS = {
-  average: { formula: "C = (A + B) / 2", description: "Combina las dos matrices sin superar la intensidad máxima." },
+  sum: { formula: "C = A + B", description: "Suma algebraica auténtica. Los valores superiores a 1 se normalizan según el modo elegido." },
+  average: { formula: "C = (A + B) / 2", description: "Promedio de intensidades de A y B; no es la suma algebraica sin escalar." },
   subtract: { formula: "C = máx(0, A − B)", description: "Conserva la parte de A que B no neutraliza." },
   matrixProduct: { formula: "C = (A × B) / 8", description: "Producto algebraico: cada celda combina una fila de A con una columna de B." },
   hadamard: { formula: "Cᵢⱼ = Aᵢⱼ · Bᵢⱼ", description: "Multiplicación elemento a elemento: resalta coincidencias temporales." },
   transpose: { formula: "Cᵢⱼ = Aⱼᵢ", description: "Intercambia instrumentos y tiempos de la matriz A." },
   reverse: { formula: "Cᵢⱼ = Aᵢ,₇₋ⱼ", description: "Invierte la secuencia temporal sin intercambiar instrumentos." },
-  invertIntensity: { formula: "Cᵢⱼ = (Aᵢⱼ > 0) ? 1 − Aᵢⱼ : 0", description: "Invierte la fuerza de los golpes presentes; los silencios permanecen." },
+  invertIntensity: { formula: "Cᵢⱼ = (Aᵢⱼ > 0) ? 4/3 − Aᵢⱼ : 0", description: "Intercambia intensidades 1 ↔ 3, mantiene la 2 y preserva los silencios." },
   inverse: { formula: "C = A⁻¹  (si existe)", description: "La inversa algebraica requiere una matriz no singular; puede producir valores negativos." }
 };
 export function calculate(discreteA, discreteB, operation = "average", normalization = "fixed") {
@@ -82,13 +89,14 @@ export function calculate(discreteA, discreteB, operation = "average", normaliza
   let raw;
   let error = null;
   switch (operation) {
+    case "sum": raw = A.map((row, i) => row.map((v, j) => v + B[i][j])); break;
     case "average": raw = A.map((row, i) => row.map((v, j) => (v + B[i][j]) / 2)); break;
     case "subtract": raw = A.map((row, i) => row.map((v, j) => Math.max(0, v - B[i][j]))); break;
     case "matrixProduct": raw = multiply(A, B).map(row => row.map(v => v / SIZE)); break;
     case "hadamard": raw = A.map((row, i) => row.map((v, j) => v * B[i][j])); break;
     case "transpose": raw = A.map((row, i) => row.map((_, j) => A[j][i])); break;
     case "reverse": raw = A.map(row => [...row].reverse()); break;
-    case "invertIntensity": raw = A.map(row => row.map(v => v > 0 ? 1 - v : 0)); break;
+    case "invertIntensity": raw = A.map(row => row.map(v => v > 0 ? 4 / 3 - v : 0)); break;
     case "inverse":
       raw = inverse(A);
       if (!raw) { error = "A es singular: no tiene inversa algebraica. Modifica la matriz A."; raw = ZERO(); }
@@ -96,7 +104,7 @@ export function calculate(discreteA, discreteB, operation = "average", normaliza
     default: raw = A.map((row, i) => row.map((v, j) => (v + B[i][j]) / 2));
   }
   const continuous = normalizeResult(raw, normalization);
-  return { continuous, discrete: quantize(continuous), error, formula: meta.formula, description: meta.description };
+  return { raw, continuous, discrete: quantize(continuous), error, formula: meta.formula, description: meta.description };
 }
 export function matrixText(matrix) {
   return matrix.map(row => row.map(v => Number(v).toFixed(2).padStart(4, " ")).join("  ")).join("\n");
