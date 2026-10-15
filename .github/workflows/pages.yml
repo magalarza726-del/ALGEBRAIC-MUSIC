@@ -1,0 +1,43 @@
+name: Publicar ALGEBRAIC MUSIC
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: algebraic-music-pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Obtener proyecto
+        uses: actions/checkout@v4
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Comprobar JavaScript y matematicas
+        run: |
+          node --check app.js
+          node --test tests/*.test.mjs
+      - name: Descargar muestras acusticas CC0 y preparar el sitio
+        run: python3 scripts/build_site.py
+      - name: Configurar GitHub Pages
+        uses: actions/configure-pages@v5
+      - name: Subir sitio
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: ./dist
+      - name: Publicar
+        id: deployment
+        uses: actions/deploy-pages@v4
