@@ -11,20 +11,8 @@ const INSTRUMENTS = [
   {name:"Tom 1", short:"Tom alto", family:"tomhi", color:"#90d6fb"},
   {name:"Tom 2", short:"Tom bajo", family:"tomlo", color:"#edce81"}
 ];
-const BANK = {
-  kick:{name:"Bombo acústico", folder:"drumkit", levels:[1,2,4]},
-  hho:{name:"Hi-hat abierto", folder:"drumkit", levels:[1,2,4]},
-  hhc:{name:"Hi-hat cerrado", folder:"drumkit", levels:[1,2,4]},
-  snare:{name:"Redoblante acústico", folder:"drumkit", levels:[2,4,6]},
-  crash:{name:"Crash acústico", folder:"drumkit2", levels:[1,2,3]},
-  china:{name:"China / Crash 2", folder:"drumkit2", levels:[1,3,5]},
-  tomhi:{name:"Tom agudo", folder:"drumkit", levels:[1,2,4]},
-  tomlo:{name:"Tom grave", folder:"drumkit", levels:[1,2,4]},
-  ride:{name:"Ride", folder:"drumkit", levels:[1,2,3]},
-  ridebell:{name:"Campana del ride", folder:"drumkit", levels:[1,2,3]}
-};
-const PINNED = "2f26075ea93291535a869f5d356d2e3d934c7868";
-const RAW = "https://raw.githubusercontent.com/0x4D44/ferrosintesis/" + PINNED + "/crates/ferrosintesis-samples-";
+const CATALOG = await (await fetch("./sound-bank.json")).json();
+const BANK = CATALOG.banks;
 const storageKey = "algebraic-music-v1";
 const initialTracks = () => INSTRUMENTS.map(v => ({family:v.family, volume:100, pan:0, tune:0, mute:false}));
 const cleanTrack = (t, i) => ({
@@ -37,7 +25,7 @@ const cleanTrack = (t, i) => ({
 function defaultState() {
   return { A:DEFAULT_A.map(row=>[...row]), B:DEFAULT_B.map(row=>[...row]), bpm:110,
     playSource:"C", operation:"average", normalization:"fixed", master:80,
-    velocityCurve:"natural", compression:"soft", tracks:initialTracks() };
+    velocityCurve:"natural", compression:"soft", room:12, tracks:initialTracks() };
 }
 function loadSaved() {
   try {
@@ -52,11 +40,12 @@ function sanitize(parsed) {
     A:parsed.A.map(row=>[...row]),B:parsed.B.map(row=>[...row]),
     bpm:clampInt(parsed.bpm,40,240,110),
     playSource:["A","B","C"].includes(parsed.playSource)?parsed.playSource:"C",
-    operation:["average","subtract","matrixProduct","hadamard","transpose","reverse","invertIntensity","inverse"].includes(parsed.operation)?parsed.operation:"average",
-    normalization:["fixed","peak"].includes(parsed.normalization)?parsed.normalization:"fixed",
+    operation:["sum","average","subtract","matrixProduct","hadamard","transpose","reverse","invertIntensity","inverse"].includes(parsed.operation)?parsed.operation:"average",
+    normalization:["fixed","peak","range"].includes(parsed.normalization)?parsed.normalization:"fixed",
     master:clampInt(parsed.master,0,100,80),
     velocityCurve:["natural","dynamic","compressed"].includes(parsed.velocityCurve)?parsed.velocityCurve:"natural",
     compression:["soft","off"].includes(parsed.compression)?parsed.compression:"soft",
+    room:clampInt(parsed.room,0,35,12),
     tracks:Array.from({length:SIZE},(_,i)=>cleanTrack(parsed.tracks?.[i] || defaults.tracks[i],i))
   };
 }
@@ -96,6 +85,12 @@ class DrumAudio {
       $("#audioStatus").classList.add("error"); return;
     }
     this.bus=this.ctx.createGain();
+    this.room=this.ctx.createConvolver();
+    this.room.buffer=makeRoomImpulse(this.ctx);
+    this.roomGain=this.ctx.createGain();
+    this.roomGain.gain.value=state.room / 100;
+    this.bus.connect(this.room);
+    this.room.connect(this.roomGain);
     this.compressor=this.ctx.createDynamicsCompressor();
     this.compressor.threshold.value=-15;
     this.compressor.knee.value=18;
@@ -105,6 +100,7 @@ class DrumAudio {
     this.master=this.ctx.createGain();
     this.master.gain.value=state.master/100*.8;
     this.master.connect(this.ctx.destination);
+    this.roomGain.connect(this.master);
     this.setCompression(state.compression);
     this.channels=INSTRUMENTS.map((_,i)=>{
       const gain=this.ctx.createGain();
@@ -130,6 +126,7 @@ class DrumAudio {
     else this.bus.connect(this.master);
   }
   applyMaster(){if(this.master)this.master.gain.setTargetAtTime(state.master/100*.8,this.ctx.currentTime,.02);}
+  applyRoom(){if(this.roomGain)this.roomGain.gain.setTargetAtTime(state.room/100,this.ctx.currentTime,.04);}
   applyTrack(i){
     if(!this.channels)return;
     const t=state.tracks[i];
@@ -138,7 +135,9 @@ class DrumAudio {
   }
   sampleFile(family,intensity,rr) {
     const b=BANK[family];
-    return family+"_vl"+b.levels[intensity-1]+"_rr"+rr+".flac";
+    return b.type==="acoustic"
+      ?family+"_vl"+b.levels[intensity-1]+"_rr"+rr+".flac"
+      :family+"_v"+intensity+".wav";
   }
   async probeLocal() {
     if(this.base!==null) return this.base;
@@ -158,7 +157,9 @@ class DrumAudio {
     if(!BANK[family]) return;
     if(this.pending.has(family)) return this.pending.get(family);
     const files=[];
-    for(let vel=1;vel<=3;vel++) for(let rr=1;rr<=2;rr++)
+    const bank=BANK[family];
+    const levels=bank.type==="acoustic"?3:bank.files.length;
+    for(let vel=1;vel<=levels;vel++) for(let rr=1;rr<=(bank.rr||1);rr++)
       files.push({vel,rr,file:this.sampleFile(family,vel,rr)});
     this.total+=files.length;
     this.report();
@@ -168,7 +169,9 @@ class DrumAudio {
         const key=family+"/"+entry.vel+"/"+entry.rr;
         if(this.samples.has(key))return;
         const local="./assets/samples/"+entry.file;
-        const remote=RAW+BANK[family].folder+"/samples/"+entry.file;
+        const remote=bank.type==="acoustic"
+          ? CATALOG.sources.acoustic+bank.folder+"/samples/"+entry.file
+          : CATALOG.sources.electronic+bank.files[entry.vel-1];
         try {
           const url=this.base==="local"?local:remote;
           let response=await fetch(url,{cache:"force-cache"});
@@ -190,11 +193,11 @@ class DrumAudio {
     $("#sampleStatus").textContent= this.failed && !this.loaded
       ?"No se pudieron cargar muestras. Revisa la conexión."
       :this.failed?"Algunas muestras no están disponibles"
-      :this.loaded<total?"Cargando grabaciones acústicas…":"Banco acústico listo";
+      :this.loaded<total?"Cargando banco de sonidos…":"Banco de sonidos listo";
     $("#sampleCounter").textContent=this.loaded+" / "+total;
     $("#sampleProgress").style.width=(total?100*this.loaded/total:0)+"%";
     const status=$("#audioStatus");
-    status.textContent=this.loaded>0?"Acústico · "+this.loaded+" muestras":this.failed?"Sin audio disponible":"Cargando muestras...";
+    status.textContent=this.loaded>0?"Audio HQ · "+this.loaded+" muestras":this.failed?"Sin audio disponible":"Cargando muestras...";
     status.classList.toggle("ready",this.loaded>0);
     status.classList.toggle("error",this.failed>0&&!this.loaded);
   }
@@ -207,11 +210,12 @@ class DrumAudio {
     }
     const family=state.tracks[i].family;
     const counterKey=family+"/"+level;
-    const rr=(this.hitCounter.get(counterKey)||0)%2+1;
+    const rrCount=BANK[family].rr||1;
+    const rr=(this.hitCounter.get(counterKey)||0)%rrCount+1;
     this.hitCounter.set(counterKey,(this.hitCounter.get(counterKey)||0)+1);
     return this.samples.get(family+"/"+level+"/"+rr)
       ||this.samples.get(family+"/"+level+"/1")
-      ||this.samples.get(family+"/"+level+"/2") || null;
+      ||this.samples.get(family+"/1/1") || null;
   }
   velocityGain(level) {
     const curve={natural:[0,.28,.60,1],dynamic:[0,.12,.42,1],compressed:[0,.55,.78,1]}[state.velocityCurve]||[0,.28,.60,1];
@@ -227,12 +231,12 @@ class DrumAudio {
     sample.playbackRate.value=Math.pow(2,state.tracks[row].tune/12);
     const lowpass=this.ctx.createBiquadFilter();
     lowpass.type="lowpass";
-    lowpass.frequency.value=[0,3400,9000,20000][level];
+    lowpass.frequency.value=[0,12500,17000,20000][level];
     lowpass.Q.value=.35;
     const velocity=this.ctx.createGain();
     velocity.gain.setValueAtTime(this.velocityGain(level),time);
     sample.connect(lowpass);lowpass.connect(velocity);velocity.connect(this.channels[row].gain);
-    if(state.tracks[row].family==="hhc") {
+    if(["hhc","hhp","trapHat","vintageHat"].includes(state.tracks[row].family)) {
       for(const active of this.openHats) {
         if(active.time>time)continue;
         active.gain.gain.cancelScheduledValues(time);
@@ -240,7 +244,7 @@ class DrumAudio {
       }
       this.openHats=this.openHats.filter(entry=>entry.time>time);
     }
-    if(state.tracks[row].family==="hho") this.openHats.push({gain:velocity,time});
+    if(["hho","trapOpenHat"].includes(state.tracks[row].family)) this.openHats.push({gain:velocity,time});
     const voice={sample,velocity,row};
     this.activeVoices.add(voice);
     sample.onended=()=>{this.activeVoices.delete(voice);this.openHats=this.openHats.filter(v=>v.gain!==velocity);try{sample.disconnect();lowpass.disconnect();velocity.disconnect();}catch{}};
@@ -274,6 +278,11 @@ class DrumAudio {
     limiter.attack.value=.003;limiter.release.value=.15;
     const master=offline.createGain();master.gain.value=state.master/100*.8;
     sum.connect(limiter);limiter.connect(master);master.connect(offline.destination);
+    if(state.room>0){
+      const room=offline.createConvolver();room.buffer=makeRoomImpulse(offline);
+      const wet=offline.createGain();wet.gain.value=state.room/100;
+      sum.connect(room);room.connect(wet);wet.connect(master);
+    }
     const channels=state.tracks.map(t=>{
       const volume=offline.createGain();volume.gain.value=t.mute?0:t.volume/100;
       const pan=offline.createStereoPanner();pan.pan.value=t.pan/100;
@@ -290,7 +299,7 @@ class DrumAudio {
           const sample=offline.createBufferSource();sample.buffer=buffer;
           sample.playbackRate.value=Math.pow(2,state.tracks[i].tune/12);
           const filter=offline.createBiquadFilter();filter.type="lowpass";
-          filter.frequency.value=[0,3400,9000,20000][level];
+          filter.frequency.value=[0,12500,17000,20000][level];
           const gain=offline.createGain();gain.gain.value=this.velocityGain(level);
           sample.connect(filter);filter.connect(gain);gain.connect(channels[i]);sample.start(time);
         }
@@ -314,6 +323,22 @@ function audioBufferToWav(buffer){
     v.setInt16(p,x<0?x*32768:x*32767,true);p+=2;
   }
   return new Blob([bytes],{type:"audio/wav"});
+}
+function makeRoomImpulse(ctx) {
+  const frames=Math.ceil(ctx.sampleRate*.65);
+  const impulse=ctx.createBuffer(2,frames,ctx.sampleRate);
+  let seed=190871;
+  for(let ch=0;ch<2;ch++){
+    const data=impulse.getChannelData(ch);
+    for(let i=0;i<frames;i++){
+      seed=(Math.imul(seed,1664525)+1013904223)>>>0;
+      const noise=(seed/4294967296)*2-1;
+      const time=i/ctx.sampleRate;
+      const onset=Math.min(1,time/.017);
+      data[i]=noise*onset*Math.exp(-time*8.8)*.22;
+    }
+  }
+  return impulse;
 }
 const audio=new DrumAudio();
 let isPlaying=false,timer=null,nextTime=0,nextStep=0,visualEvents=[],raf=null,visibleStep=-1;
@@ -388,7 +413,8 @@ function renderMath(){
   $("#numericA").textContent=matrixText(toNormalized(state.A));
   $("#numericB").textContent=matrixText(toNormalized(state.B));
   $("#numericC").textContent=matrixText(derived.continuous);
-  $("#resultDescriptor").textContent="0–3 · "+(state.normalization==="peak"?"pico relativo":"escala fija");
+  $("#numericRaw").textContent=matrixText(derived.raw);
+  $("#resultDescriptor").textContent="0–3 · "+({peak:"pico relativo",range:"mínimo/máximo",fixed:"escala fija"}[state.normalization]);
   paintHead(-1);
   persist();
 }
@@ -409,12 +435,16 @@ function syncControls(){
   $("#masterGain").value=state.master;$("#masterValue").textContent=state.master+"%";
   $("#operation").value=state.operation;$("#normalization").value=state.normalization;
   $("#velocityCurve").value=state.velocityCurve;$("#compression").value=state.compression;
+  $("#room").value=state.room;$("#roomValue").textContent=state.room+"%";
 }
 function renderMixer(){
   const opens=new Set([...document.querySelectorAll(".mixer-channel[open]")].map(el=>+el.dataset.track));
   $("#mixer").innerHTML=state.tracks.map((track,i)=>{
     const inst=INSTRUMENTS[i];
-    const options=Object.entries(BANK).map(([value,info])=>'<option value="'+value+'" '+(track.family===value?'selected':'')+'>'+info.name+'</option>').join("");
+    const cats=[...new Set(Object.values(BANK).map(info=>info.category))];
+    const options=cats.map(category=>'<optgroup label="'+category+'">'+Object.entries(BANK)
+      .filter(([_,info])=>info.category===category)
+      .map(([value,info])=>'<option value="'+value+'" '+(track.family===value?'selected':'')+'>'+info.name+'</option>').join("")+'</optgroup>').join("");
     const layers=[1,2,3].map((v)=>'<label>'+["Suave (1)","Media (2)","Fuerte (3)"][v-1]+'<input type="file" accept="audio/*,.wav,.flac,.mp3,.m4a,.ogg" data-custom="'+i+'" data-layer="'+v+'" aria-label="Cargar muestra '+v+' de '+inst.name+'"></label>').join("");
     return '<details class="mixer-channel" data-track="'+i+'" style="--track-color:'+inst.color+'" '+(opens.has(i)?'open':'')+'>'+
       '<summary><i class="mix-dot"></i><strong>'+inst.name+'</strong><button type="button" class="channel-preview" data-preview="'+i+'" title="Escuchar golpe fuerte">♪</button><span class="mix-value" id="mixValue'+i+'">'+track.volume+'%</span><span class="chevron">▾</span></summary>'+
@@ -441,7 +471,7 @@ function downloadBlob(blob,name){
   setTimeout(()=>URL.revokeObjectURL(url),60000);
 }
 function downloadProject(){
-  const data={...state,format:"algebraic-music-v1",resultContinuous:derived.continuous,resultDiscrete:derived.discrete,
+  const data={...state,format:"algebraic-music-v2",resultRaw:derived.raw,resultContinuous:derived.continuous,resultDiscrete:derived.discrete,
     notice:"Los archivos de audio personalizados no están incluidos en este JSON."};
   downloadBlob(new Blob([JSON.stringify(data,null,2)],{type:"application/json"}),"ALGEBRAIC-MUSIC-proyecto.json");
   notify("Proyecto JSON descargado.");
@@ -449,7 +479,7 @@ function downloadProject(){
 function resetProject(){
   if(!confirm("¿Restaurar la demo inicial? Se reemplazarán tus matrices y controles guardados."))return;
   stop();state=defaultState();audio.custom.clear();syncControls();renderMixer();audio.applyMaster();
-  audio.setCompression(state.compression);
+  audio.setCompression(state.compression);audio.applyRoom();
   state.tracks.forEach((_,i)=>audio.applyTrack(i));renderMath();audio.loadDefault();notify("Demo restaurada.");
 }
 function wire(){
@@ -478,6 +508,7 @@ function wire(){
   $("#normalization").addEventListener("change",event=>{state.normalization=event.target.value;renderMath();});
   $("#velocityCurve").addEventListener("change",event=>{state.velocityCurve=event.target.value;persist();});
   $("#compression").addEventListener("change",event=>{state.compression=event.target.value;audio.setCompression(state.compression);persist();});
+  $("#room").addEventListener("input",event=>{state.room=+event.target.value;$("#roomValue").textContent=state.room+"%";audio.applyRoom();persist();});
   $("#copyToA").addEventListener("click",()=>{state.A=derived.discrete.map(row=>[...row]);renderMath();notify("C copiada a A.");});
   $("#copyToB").addEventListener("click",()=>{state.B=derived.discrete.map(row=>[...row]);renderMath();notify("C copiada a B.");});
   $("#mixer").addEventListener("input",event=>{if(event.target.dataset.field&&event.target.type==="range")updateMixer(event);});
@@ -509,7 +540,7 @@ function wire(){
       if(!validDiscrete(parsed.A)||!validDiscrete(parsed.B))throw Error("El JSON no contiene matrices 8×8 válidas.");
       stop();state=sanitize(parsed);audio.custom.clear();syncControls();renderMixer();
       state.tracks.forEach((t,i)=>{audio.applyTrack(i);audio.loadFamily(t.family);});
-      audio.applyMaster();audio.setCompression(state.compression);renderMath();notify("Proyecto abierto.");
+      audio.applyMaster();audio.applyRoom();audio.setCompression(state.compression);renderMath();notify("Proyecto abierto.");
     }catch(error){notify("No se pudo abrir el proyecto: "+error.message);}
     event.target.value="";
   });
