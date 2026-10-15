@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0b111d">
+  <meta name="description" content="ALGEBRAIC MUSIC: compón baterías y transforma ritmos con álgebra matricial.">
+  <title>ALGEBRAIC MUSIC · Drum Matrix Lab</title>
+  <link rel="icon" href="./favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="./styles.css">
+  <script type="module" src="./app.js"></script>
+</head>
+<body>
+  <div class="ambient ambient-one"></div><div class="ambient ambient-two"></div>
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true"><span>∑</span><span class="brand-dot"></span></div>
+        <div><p class="eyebrow">MATRIX-BASED DRUM MACHINE</p><h1>ALGEBRAIC<span>MUSIC</span></h1></div>
+      </div>
+      <div class="top-actions">
+        <span id="audioStatus" class="connection-status"><i></i> Audio pendiente</span>
+        <button id="helpBtn" class="btn btn-quiet" type="button">¿Cómo funciona?</button>
+        <button id="saveBtn" class="btn btn-outline" type="button">↓ Guardar proyecto</button>
+        <label class="btn btn-outline upload-label">↑ Abrir proyecto<input id="openProjectInput" type="file" accept=".json,application/json" hidden></label>
+      </div>
+    </header>
+
+    <section class="hero">
+      <div>
+        <div class="section-overline">ESTUDIO DE RITMOS · VERSIÓN 1.0</div>
+        <h2>Las matemáticas <em>también suenan.</em></h2>
+        <p>Dibuja patrones, calcula nuevas matrices y escucha cómo cambia cada golpe.</p>
+      </div>
+      <div class="hero-visual" aria-hidden="true"><div class="hero-bars" id="heroBars"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div><div class="hero-orbit">8 × 8</div></div>
+    </section>
+
+    <section class="transport panel" aria-label="Transporte y reproducción">
+      <div class="transport-primary">
+        <button id="playBtn" class="play-button" aria-label="Reproducir o pausar"><span id="playIcon">▶</span></button>
+        <button id="stopBtn" class="transport-icon" title="Detener" aria-label="Detener">■</button>
+        <div class="transport-copy"><strong id="playState">Listo para tocar</strong><small>Un compás 4/4 · 8 corcheas</small></div>
+      </div>
+      <div class="transport-controls">
+        <label class="control-pair bpm"><span>BPM</span><span class="number-control"><button id="bpmDown" aria-label="Disminuir BPM">−</button><input id="bpmInput" type="number" min="40" max="240" step="1" value="110"><button id="bpmUp" aria-label="Aumentar BPM">+</button></span></label>
+        <label class="control-pair"><span>REPRODUCIR</span><select id="playSource" aria-label="Patrón de reproducción"><option value="C">Resultado C</option><option value="A">Matriz A</option><option value="B">Matriz B</option></select></label>
+        <label class="control-pair master"><span>MASTER <output id="masterValue">80%</output></span><input id="masterGain" type="range" min="0" max="100" value="80"></label>
+      </div>
+      <div class="transport-steps" id="transportSteps" aria-label="Pasos de reproducción"></div>
+    </section>
+
+    <main class="workbench">
+      <section class="studio-column">
+        <div class="workspace-heading"><div><p class="section-overline">01 / COMPOSICIÓN</p><h3>Tus matrices</h3></div><span class="legend"><i class="legend-zero"></i> 0 Silencio <i class="legend-one"></i> 1 Suave <i class="legend-two"></i> 2 Medio <i class="legend-three"></i> 3 Fuerte</span></div>
+        <p class="hint">Haz clic para avanzar 0 → 1 → 2 → 3 → 0. Clic derecho para retroceder. Mantén Shift y haz clic para escuchar una celda.</p>
+        <div class="matrix-duo">
+          <article class="matrix-card panel">
+            <div class="matrix-head"><div><span class="matrix-letter letter-a">A</span><div><h4>Matriz A</h4><small>Patrón original</small></div></div><div class="head-buttons"><button class="mini-btn" data-action="random" data-target="A" title="Generar ritmo aleatorio">Aleatorio</button><button class="mini-btn" data-action="clear" data-target="A">Limpiar</button></div></div>
+            <div class="matrix-scroll"><div class="matrix-grid" id="matrixA"></div></div>
+            <div class="matrix-foot"><span id="countA">0 golpes</span><button class="link-button" id="previewA">▶ Escuchar A</button></div>
+          </article>
+          <article class="matrix-card panel">
+            <div class="matrix-head"><div><span class="matrix-letter letter-b">B</span><div><h4>Matriz B</h4><small>Segundo patrón</small></div></div><div class="head-buttons"><button class="mini-btn" data-action="random" data-target="B" title="Generar ritmo aleatorio">Aleatorio</button><button class="mini-btn" data-action="clear" data-target="B">Limpiar</button></div></div>
+            <div class="matrix-scroll"><div class="matrix-grid" id="matrixB"></div></div>
+            <div class="matrix-foot"><span id="countB">0 golpes</span><button class="link-button" id="previewB">▶ Escuchar B</button></div>
+          </article>
+        </div>
+
+        <article class="operation-panel panel">
+          <div class="operation-title"><div class="operation-icon">ƒ(x)</div><div><p class="section-overline">02 / TRANSFORMACIÓN</p><h3>Laboratorio de operaciones</h3></div></div>
+          <div class="operation-fields">
+            <label><span>OPERACIÓN MATEMÁTICA</span><select id="operation">
+              <option value="average">A + B · Suma promediada</option>
+              <option value="subtract">A − B · Diferencia positiva</option>
+              <option value="matrixProduct">A × B · Multiplicación matricial</option>
+              <option value="hadamard">A ⊙ B · Producto elemento a elemento</option>
+              <option value="transpose">Aᵀ · Transpuesta</option>
+              <option value="reverse">↔ A · Inversión temporal</option>
+              <option value="invertIntensity">A · Invertir intensidad</option>
+              <option value="inverse">A⁻¹ · Inversa algebraica</option>
+            </select></label>
+            <label><span>NORMALIZACIÓN</span><select id="normalization"><option value="fixed">Escala fija [0, 1]</option><option value="peak">Pico máximo = 1</option></select></label>
+          </div>
+          <p class="operation-explanation" id="operationExplanation"></p>
+          <div class="operation-formula" id="formula">C = (A + B) / 2</div>
+          <p class="error-message" id="mathError" role="status" hidden></p>
+        </article>
+
+        <article class="result-panel panel">
+          <div class="result-heading"><div><p class="section-overline">03 / RESULTADO</p><h3><span class="matrix-letter letter-c">C</span> Ritmo resultante</h3></div><span class="live-tag">● ACTUALIZACIÓN EN VIVO</span></div>
+          <div class="matrix-scroll result-scroll"><div class="matrix-grid" id="matrixC"></div></div>
+          <div class="result-actions"><div><strong id="countC">0 golpes</strong><span id="resultDescriptor">Intensidades de 0 a 3</span></div><div class="result-buttons"><button id="copyToA" class="btn btn-outline">C → A</button><button id="copyToB" class="btn btn-outline">C → B</button><button id="previewC" class="btn btn-accent">▶ Escuchar C</button></div></div>
+          <details class="numeric-details"><summary>Ver matrices numéricas normalizadas</summary><div class="numeric-columns"><div><h5>A / 3</h5><pre id="numericA"></pre></div><div><h5>B / 3</h5><pre id="numericB"></pre></div><div><h5>C continua (sin cuantizar)</h5><pre id="numericC"></pre></div></div><p>La reproducción cuantiza C a 0, 1, 2 o 3; sus valores continuos se preservan en la operación y al exportar.</p></details>
+        </article>
+      </section>
+
+      <aside class="sound-column">
+        <section class="panel sound-panel">
+          <div class="sound-heading"><div><p class="section-overline">04 / AUDIO</p><h3>Diseño de sonido</h3></div><span class="sound-glyph">♫</span></div>
+          <p class="sound-intro">Grabaciones reales, diferentes capas de fuerza y control por instrumento.</p>
+          <div class="audio-progress"><div class="progress-header"><span id="sampleStatus">Preparando banco acústico...</span><span id="sampleCounter">0 / 0</span></div><div class="progress-track"><div id="sampleProgress"></div></div></div>
+          <label class="sound-control"><span>RESPUESTA A LA INTENSIDAD</span><select id="velocityCurve"><option value="natural">Natural · timbre y volumen</option><option value="dynamic">Dinámica · más contraste</option><option value="compressed">Comprimida · menos contraste</option></select></label>
+          <label class="sound-control"><span>MEZCLA / LÍMITE DE SALIDA</span><select id="compression"><option value="soft">Protección suave activada</option><option value="off">Sin compresor</option></select></label>
+          <div class="track-tools"><strong>8 canales</strong><button id="resetMixer" class="link-button">Restablecer mezcla</button></div>
+          <div id="mixer" class="mixer-list"></div>
+          <p class="small-note">Personalización: cambia el instrumento de cualquier fila, su volumen, afinación, panorama o carga tres muestras propias (suave / media / fuerte). Las muestras personalizadas se mantienen durante esta sesión.</p>
+        </section>
+        <section class="panel utilities-panel">
+          <div><p class="section-overline">05 / PROYECTO</p><h3>Herramientas</h3></div>
+          <button id="exportWav" class="btn btn-outline btn-full">↓ Exportar patrón WAV (4 compases)</button>
+          <button id="resetAll" class="btn btn-quiet btn-full">Restaurar proyecto de ejemplo</button>
+          <p>Tu sesión se guarda automáticamente en este navegador. También puedes descargar un archivo JSON editable.</p>
+        </section>
+      </aside>
+    </main>
+    <footer><span>ALGEBRAIC MUSIC · v1.0 · Una forma diferente de escuchar las matrices</span><span>Samples acústicos CC0 · <a href="https://github.com/0x4D44/ferrosintesis" target="_blank" rel="noopener">Proveniencia</a> · <a href="https://github.com/magalarza726-del/ALGEBRAIC-MUSIC" target="_blank" rel="noopener">GitHub</a></span></footer>
+  </div>
+
+  <dialog id="helpDialog" class="help-dialog"><div class="dialog-body"><div class="dialog-top"><h3>¿Cómo se usa?</h3><button id="closeHelp" aria-label="Cerrar">✕</button></div><p><strong>1.</strong> Las 8 filas son instrumentos; las 8 columnas son corcheas de un compás 4/4. Haz clic en una celda para cambiar la intensidad.</p><p><strong>2.</strong> Edita A y B, elige una operación y observa la matriz C. Los valores se normalizan entre 0 y 1 y se convierten a 0–3 para sonar.</p><p><strong>3.</strong> Pulsa ▶ para escuchar A, B o C. Configura las intensidades en el mezclador: cada fuerza utiliza una grabación diferente, además de cambiar el volumen.</p><p><strong>4.</strong> Para usar tus propios archivos, abre las opciones de un canal y carga hasta tres muestras (WAV, MP3, FLAC u otros formatos que soporte el navegador).</p><p>La inversa algebraica A⁻¹ solo existe cuando A es invertible. El programa lo indicará cuando sea singular.</p><button class="btn btn-accent" id="closeHelpBottom">Entendido</button></div></dialog>
+  <div id="toast" class="toast" aria-live="polite" role="status"></div>
+</body>
+</html>
