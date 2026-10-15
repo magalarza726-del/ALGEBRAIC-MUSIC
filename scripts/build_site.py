@@ -14,7 +14,7 @@ CATALOG = json.loads((ROOT / "sound-bank.json").read_text(encoding="utf-8"))
 def sample_jobs():
     for family, bank in CATALOG["banks"].items():
         if bank["type"] == "acoustic":
-            for level in bank["levels"]:
+            for level in dict.fromkeys(bank["levels"]):
                 for rr in range(1, bank["rr"] + 1):
                     filename = f"{family}_vl{level}_rr{rr}.flac"
                     url = CATALOG["sources"]["acoustic"] + bank["folder"] + "/samples/" + filename
